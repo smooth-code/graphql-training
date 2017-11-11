@@ -24,8 +24,8 @@ const schema = makeExecutableSchema({ typeDefs })
 addMockFunctionsToSchema({ schema })
 
 const query = /* GraphQL */ `
-  {
-    character(id: 6) {
+  query Character($id: ID!){
+    character(id: $id) {
       id
       name
       height
@@ -34,6 +34,6 @@ const query = /* GraphQL */ `
   }
 `
 
-graphql(schema, query).then(result => {
+graphql(schema, query, null, null, { id: 6 }).then(result => {
   console.log('Query result:\n', result)
 })
