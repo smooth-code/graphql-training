@@ -1,0 +1,6 @@
+{
+  "ignore": ["src/index.js", "src/App.js"],
+  "execMap": {
+    "js": "babel-node"
+  }
+}
