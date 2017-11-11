@@ -5,7 +5,10 @@
   "scripts": {
     "start": "nodemon src/server.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "graphql": "^0.11.7",
+    "graphql-tools": "^2.7.2"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
