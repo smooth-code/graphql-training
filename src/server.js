@@ -2,6 +2,7 @@ import { makeExecutableSchema } from 'graphql-tools'
 import { graphql } from 'graphql'
 import { GraphQLDateTime } from 'graphql-iso-date'
 import swapi from 'swapi-node'
+import express from 'express'
 
 const typeDefs = /* GraphQL */ `
   scalar DateTime
@@ -74,3 +75,11 @@ const query = /* GraphQL */ `
 graphql(schema, query, null, null, { id: 1 }).then(result => {
   console.log('Query result:\n', result)
 })
+
+const app = express()
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+app.listen(3000)
