@@ -1,6 +1,8 @@
 import { makeExecutableSchema } from 'graphql-tools'
 import { graphql } from 'graphql'
 import { GraphQLDateTime } from 'graphql-iso-date'
+import bodyParser from 'body-parser'
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express'
 import swapi from 'swapi-node'
 import express from 'express'
 
@@ -58,28 +60,9 @@ const resolvers = {
 
 const schema = makeExecutableSchema({ typeDefs, resolvers })
 
-const query = /* GraphQL */ `
-  query Character($id: ID!){
-    character(id: $id) {
-      id
-      created
-      name
-      height
-      ... on Human {
-        gender
-      }
-    }
-  }
-`
-
-graphql(schema, query, null, null, { id: 1 }).then(result => {
-  console.log('Query result:\n', result)
-})
-
 const app = express()
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }))
+app.get('/', graphiqlExpress({ endpointURL: '/graphql' }))
 
 app.listen(3000)
