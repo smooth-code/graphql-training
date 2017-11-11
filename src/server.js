@@ -8,11 +8,23 @@ const typeDefs = /* GraphQL */ `
     UNKNOWN
   }
 
-  type Character {
+  interface Character {
+    id: ID!
+    name: String!
+    height: Int
+  }
+
+  type Human implements Character {
     id: ID!
     name: String!
     height: Int
     gender: Gender
+  }
+
+  type Droid implements Character {
+    id: ID!
+    name: String!
+    height: Int
   }
 
   type Query {
@@ -29,7 +41,9 @@ const query = /* GraphQL */ `
       id
       name
       height
-      gender
+      ... on Human {
+        gender
+      }
     }
   }
 `
