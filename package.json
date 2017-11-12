@@ -12,6 +12,7 @@
     "graphql": "^0.11.7",
     "graphql-iso-date": "^3.3.0",
     "graphql-tools": "^2.7.2",
+    "lodash": "^4.17.4",
     "swapi-node": "^0.4.3"
   },
   "devDependencies": {
