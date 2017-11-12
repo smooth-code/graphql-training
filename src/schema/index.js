@@ -6,6 +6,7 @@ import Character, { resolvers as characterResolvers } from './Character'
 const SchemaDefinition = /* GraphQL */ `
   schema {
     query: Query
+    mutation: Mutation
   }
 `
 
@@ -15,10 +16,16 @@ const Query = /* GraphQL */ `
   }
 `
 
+const Mutation = /* GraphQL */ `
+  type Mutation {
+    aNumber: Int
+  }
+`
+
 const rootResolvers = {}
 
 const schema = makeExecutableSchema({
-  typeDefs: [SchemaDefinition, Query, ...DateTime, ...Character],
+  typeDefs: [SchemaDefinition, Query, Mutation, ...DateTime, ...Character],
   resolvers: merge({}, rootResolvers, dateTimeResolvers, characterResolvers),
 })
 
