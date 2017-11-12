@@ -1,5 +1,4 @@
 import { makeExecutableSchema } from 'graphql-tools'
-import swapi from 'swapi-node'
 import Gender from './Gender'
 
 const Character = /* GraphQL */ `
@@ -32,7 +31,7 @@ const Character = /* GraphQL */ `
 
 export const resolvers = {
   Query: {
-    async character(root, { id }) {
+    async character(root, { id }, { swapi }) {
       const person = await swapi.getPerson(id)
       return { ...person, id, gender: person.gender.toUpperCase() }
     },

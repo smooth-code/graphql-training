@@ -6,7 +6,9 @@ import schema from './schema'
 
 const app = express()
 
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }))
+const context = { swapi }
+
+app.use('/graphql', bodyParser.json(), graphqlExpress({ schema, context }))
 app.get('/', graphiqlExpress({ endpointURL: '/graphql' }))
 
 app.listen(3000)
