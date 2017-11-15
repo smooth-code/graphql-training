@@ -3,9 +3,13 @@ import { graphqlExpress, graphiqlExpress } from 'apollo-server-express'
 import swapi from 'swapi-node'
 import DataLoader from 'dataloader'
 import express from 'express'
+import cors from 'cors'
 import schema from './schema'
 
 const app = express()
+
+// Make app accessible from other domains
+app.use(cors())
 
 // We create a loader by resource, differents logics
 // can exist
