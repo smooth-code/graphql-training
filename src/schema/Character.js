@@ -12,7 +12,7 @@ const Character = /* GraphQL */ `
     created: DateTime!
     name: String!
     height: Int
-    weapons: [Weapon]!
+    weapons(first: Int!, after: String): WeaponResults
     films: [Film]!
   }
 
@@ -22,7 +22,7 @@ const Character = /* GraphQL */ `
     name: String!
     height: Int
     gender: Gender
-    weapons: [Weapon]!
+    weapons(first: Int!, after: String): WeaponResults
     films: [Film]!
   }
 
@@ -31,12 +31,17 @@ const Character = /* GraphQL */ `
     created: DateTime!
     name: String!
     height: Int
-    weapons: [Weapon]!
+    weapons(first: Int!, after: String): WeaponResults
     films: [Film]!
   }
 
   type Weapon {
     name: String!
+  }
+
+  type WeaponResults {
+    lastCursor: String!
+    nodes: [Weapon!]!
   }
 
   input WeaponInput {
@@ -52,7 +57,20 @@ const Character = /* GraphQL */ `
   }
 `
 
-const characterWeapons = {}
+const characterWeapons = {
+  1: [
+    { name: 'Red Light Saber' },
+    { name: 'Blue Light Saber' },
+    { name: 'Laser Gun' },
+    { name: 'Knife' },
+  ],
+}
+
+const CURSOR_SECRET = 'SMOOTH'
+const btoa = str => Buffer.from(str).toString('base64')
+const atob = str => Buffer.from(str, 'base64').toString('utf-8')
+const indexToCursor = index => btoa(`${CURSOR_SECRET}${index}`)
+const cursorToIndex = cursor => Number(atob(cursor).replace(CURSOR_SECRET, ''))
 
 // Shared resolver between Droid and Human
 const CharacterResolver = {
@@ -61,6 +79,16 @@ const CharacterResolver = {
       const [, id] = url.match(/\/(\d)+\/$/)
       return loaders.films.load(id)
     })
+  },
+  weapons(character, { first, after }) {
+    const { weapons } = character
+    const afterIndex = after ? cursorToIndex(after) : -1
+    const firstIndex = afterIndex + 1
+    const lastIndex = afterIndex + first
+    return {
+      lastCursor: indexToCursor(lastIndex),
+      nodes: weapons.slice(firstIndex, lastIndex + 1),
+    }
   },
 }
 

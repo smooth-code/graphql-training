@@ -2,7 +2,7 @@ import React from 'react'
 import gql from 'graphql-tag'
 import { graphql, compose } from 'react-apollo'
 
-const App = ({ data, onSubmit }) => (
+const App = ({ data, onSubmit, onLoadMoreWeapons }) => (
   <div className="app">
     <header>
       <h1>Star Wars React</h1>
@@ -15,9 +15,12 @@ const App = ({ data, onSubmit }) => (
             <div key={film.id}>{film.title}</div>
           ))}
           <h2>Weapons</h2>
-          {data.character.weapons.map(weapon => (
+          {data.character.weapons.nodes.map(weapon => (
             <div key={weapon.name}>{weapon.name}</div>
           ))}
+          <button type="button" onClick={onLoadMoreWeapons}>
+            Load more
+          </button>
           <form onSubmit={onSubmit}>
             <input name="weapon" placeholder="Weapon" />
             <button>Add Weapon</button>
@@ -30,11 +33,14 @@ const App = ({ data, onSubmit }) => (
 
 const withData = graphql(
   gql`
-    query character($id: ID!) {
+    query character($id: ID!, $weaponsAfter: String) {
       character(id: $id) {
         name
-        weapons {
-          name
+        weapons(first: 2, after: $weaponsAfter) {
+          lastCursor
+          nodes {
+            name
+          }
         }
         films {
           id
@@ -45,6 +51,29 @@ const withData = graphql(
   `,
   {
     options: { variables: { id: 1 } },
+    props: ({ data }) => ({
+      data,
+      onLoadMoreWeapons() {
+        data.fetchMore({
+          variables: {
+            weaponsAfter: data.character.weapons.lastCursor,
+          },
+          updateQuery: (previousResult, { fetchMoreResult }) => ({
+            ...fetchMoreResult,
+            character: {
+              ...fetchMoreResult.character,
+              weapons: {
+                ...fetchMoreResult.character.weapons,
+                nodes: [
+                  ...previousResult.character.weapons.nodes,
+                  ...fetchMoreResult.character.weapons.nodes,
+                ],
+              },
+            },
+          }),
+        })
+      },
+    }),
   },
 )
 
