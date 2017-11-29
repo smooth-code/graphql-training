@@ -1,4 +1,5 @@
 import { makeExecutableSchema } from 'graphql-tools'
+import { withFilter } from 'graphql-subscriptions'
 import Gender from './Gender'
 
 const Character = /* GraphQL */ `
@@ -55,6 +56,10 @@ const Character = /* GraphQL */ `
   extend type Mutation {
     addCharacterWeapon(characterId: ID!, weapon: WeaponInput): Weapon
   }
+
+  extend type Subscription {
+    weaponAdded(characterId: ID!): Weapon
+  }
 `
 
 const characterWeapons = {
@@ -106,10 +111,22 @@ export const resolvers = {
     },
   },
   Mutation: {
-    async addCharacterWeapon(root, { characterId, weapon }) {
+    async addCharacterWeapon(root, { characterId, weapon }, { pubsub }) {
       characterWeapons[characterId] = characterWeapons[characterId] || []
       characterWeapons[characterId].push(weapon)
+      pubsub.publish('weaponAdded', {
+        characterId,
+        weaponAdded: weapon,
+      })
       return weapon
+    },
+  },
+  Subscription: {
+    weaponAdded: {
+      subscribe: withFilter(
+        (obj, variables, { pubsub }) => pubsub.asyncIterator('weaponAdded'),
+        (payload, variables) => payload.characterId === variables.characterId,
+      ),
     },
   },
   Character: {

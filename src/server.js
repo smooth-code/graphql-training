@@ -1,9 +1,13 @@
+import { createServer } from 'http'
 import bodyParser from 'body-parser'
+import { execute, subscribe } from 'graphql'
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express'
 import swapi from 'swapi-node'
 import DataLoader from 'dataloader'
 import express from 'express'
+import { SubscriptionServer } from 'subscriptions-transport-ws'
 import cors from 'cors'
+import { PubSub } from 'graphql-subscriptions'
 import schema from './schema'
 
 const app = express()
@@ -30,14 +34,38 @@ const createLoaders = () => ({
   }),
 })
 
+const pubsub = new PubSub()
+
 app.use(
   '/graphql',
   bodyParser.json(),
   // We pass options as a function, a new set of options is generated
   // at each new request
-  graphqlExpress(req => ({ schema, context: { loaders: createLoaders() } })),
+  graphqlExpress(req => ({
+    schema,
+    context: { loaders: createLoaders(), pubsub },
+  })),
 )
 
-app.get('/', graphiqlExpress({ endpointURL: '/graphql' }))
+app.get(
+  '/',
+  graphiqlExpress({
+    endpointURL: '/graphql',
+    subscriptionsEndpoint: `ws://localhost:3000/subscriptions`,
+  }),
+)
 
-app.listen(3000)
+const server = createServer(app)
+server.listen(3000, () => {
+  new SubscriptionServer(
+    {
+      schema,
+      execute,
+      subscribe,
+      onConnect() {
+        return { pubsub }
+      },
+    },
+    { server, path: '/subscriptions' },
+  )
+})

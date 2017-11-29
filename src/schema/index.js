@@ -7,6 +7,7 @@ const SchemaDefinition = /* GraphQL */ `
   schema {
     query: Query
     mutation: Mutation
+    subscription: Subscription
   }
 `
 
@@ -22,10 +23,23 @@ const Mutation = /* GraphQL */ `
   }
 `
 
+const Subscription = /* GraphQL */ `
+  type Subscription {
+    aNumber: Int
+  }
+`
+
 const rootResolvers = {}
 
 const schema = makeExecutableSchema({
-  typeDefs: [SchemaDefinition, Query, Mutation, ...DateTime, ...Character],
+  typeDefs: [
+    SchemaDefinition,
+    Query,
+    Mutation,
+    Subscription,
+    ...DateTime,
+    ...Character,
+  ],
   resolvers: merge({}, rootResolvers, dateTimeResolvers, characterResolvers),
 })
 
