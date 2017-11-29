@@ -2,34 +2,43 @@ import React from 'react'
 import gql from 'graphql-tag'
 import { graphql, compose } from 'react-apollo'
 
-const App = ({ data, onSubmit, onLoadMoreWeapons }) => (
-  <div className="app">
-    <header>
-      <h1>Star Wars React</h1>
-    </header>
-    <div>
-      {data.character && (
+class App extends React.Component {
+  componentDidMount() {
+    this.props.subscribeToNewWeapons()
+  }
+
+  render() {
+    const { data, onSubmit, onLoadMoreWeapons } = this.props
+    return (
+      <div className="app">
+        <header>
+          <h1>Star Wars React</h1>
+        </header>
         <div>
-          <h2>{data.character.name}</h2>
-          {data.character.films.map(film => (
-            <div key={film.id}>{film.title}</div>
-          ))}
-          <h2>Weapons</h2>
-          {data.character.weapons.nodes.map(weapon => (
-            <div key={weapon.name}>{weapon.name}</div>
-          ))}
-          <button type="button" onClick={onLoadMoreWeapons}>
-            Load more
-          </button>
-          <form onSubmit={onSubmit}>
-            <input name="weapon" placeholder="Weapon" />
-            <button>Add Weapon</button>
-          </form>
+          {data.character && (
+            <div>
+              <h2>{data.character.name}</h2>
+              {data.character.films.map(film => (
+                <div key={film.id}>{film.title}</div>
+              ))}
+              <h2>Weapons</h2>
+              {data.character.weapons.nodes.map(weapon => (
+                <div key={weapon.name}>{weapon.name}</div>
+              ))}
+              <button type="button" onClick={onLoadMoreWeapons}>
+                Load more
+              </button>
+              <form onSubmit={onSubmit}>
+                <input name="weapon" placeholder="Weapon" />
+                <button>Add Weapon</button>
+              </form>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  </div>
-)
+      </div>
+    )
+  }
+}
 
 const withData = graphql(
   gql`
@@ -53,6 +62,34 @@ const withData = graphql(
     options: { variables: { id: 1 } },
     props: ({ data }) => ({
       data,
+      // Add a props to be able to subscribe to new weapons
+      subscribeToNewWeapons() {
+        return data.subscribeToMore({
+          document: gql`
+            subscription onWeaponAdded($characterId: ID!) {
+              weaponAdded(characterId: $characterId) {
+                name
+              }
+            }
+          `,
+          variables: { characterId: data.variables.id },
+          updateQuery: (prev, { subscriptionData: { weaponAdded } }) => {
+            if (!weaponAdded) return prev
+
+            // Recursively merge data to add new weapon
+            return {
+              ...prev,
+              character: {
+                ...prev.character,
+                weapons: {
+                  ...prev.character.weapons,
+                  nodes: [...prev.character.weapons.nodes, weaponAdded],
+                },
+              },
+            }
+          },
+        })
+      },
       onLoadMoreWeapons() {
         data.fetchMore({
           variables: {
@@ -97,7 +134,6 @@ const withMutate = graphql(
             },
           },
         })
-        data.refetch()
       },
     }),
   },
